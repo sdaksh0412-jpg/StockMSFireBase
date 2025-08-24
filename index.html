@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stock Management App</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>📦 Stock Management System</h1>
+
+  <!-- Material Master -->
+  <section>
+    <h2>Material Master</h2>
+    <input id="matCode" placeholder="Code">
+    <input id="matName" placeholder="Name">
+    <input id="matCategory" placeholder="Category">
+    <input id="matAlert" type="number" placeholder="Stock Quantity Alert">
+    <button onclick="saveMaterial()">Save</button>
+  </section>
+
+  <!-- Stock In -->
+  <section>
+    <h2>Stock In</h2>
+    <input id="inDate" type="datetime-local">
+    <input id="inMaterial" placeholder="Material Code">
+    <input id="inQty" type="number" placeholder="Qty">
+    <input id="inPrice" type="number" placeholder="Price">
+    <input id="inVendor" placeholder="Vendor">
+    <input id="inBill" placeholder="Bill No">
+    <input id="inRemark" placeholder="Remark">
+    <button onclick="stockIn()">Save</button>
+  </section>
+
+  <!-- Stock Out -->
+  <section>
+    <h2>Stock Out</h2>
+    <input id="outDate" type="datetime-local">
+    <input id="outMaterial" placeholder="Material Code">
+    <input id="outQty" type="number" placeholder="Qty">
+    <input id="outPrice" type="number" placeholder="Price">
+    <input id="outName" placeholder="Name">
+    <input id="outMobile" placeholder="Mobile">
+    <input id="outEmail" placeholder="Email">
+    <input id="outRemark" placeholder="Remark">
+    <button onclick="stockOut()">Save</button>
+  </section>
+
+  <!-- Stock Register -->
+  <section>
+    <h2>Stock Register</h2>
+    <table border="1">
+      <thead>
+        <tr>
+          <th>Date</th><th>Material</th><th>In</th><th>Out</th><th>Balance</th><th>Remark</th>
+        </tr>
+      </thead>
+      <tbody id="stockRegister"></tbody>
+    </table>
+  </section>
+
+  <!-- Dashboard -->
+  <section>
+    <h2>Dashboard</h2>
+    <div id="dashboard"></div>
+  </section>
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
