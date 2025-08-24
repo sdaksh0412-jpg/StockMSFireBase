@@ -1,72 +1,362 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Stock Management App</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stock Management — Admin & Employee</title>
+  <style>
+    :root { --gap: 14px; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background:#0b1020; color:#e8ecf1; }
+    header { display:flex; align-items:center; justify-content:space-between; padding:16px 22px; position:sticky; top:0; background:#0e1530; border-bottom:1px solid #253055; }
+    header h1 { margin:0; font-size:18px; letter-spacing:.3px; }
+    header .user { font-size:14px; opacity:.9; }
+    main { padding: 22px; max-width: 1100px; margin: 0 auto; }
+    .card { background:#111a3a; border:1px solid #243160; border-radius:14px; padding:18px; margin-bottom: var(--gap); box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--gap); }
+    h2 { margin: 0 0 8px; font-size: 18px; }
+    label { display:block; font-size:12px; opacity:.8; margin:10px 0 6px; }
+    input, select { width:100%; padding:10px 12px; background:#0b132c; color:#e8ecf1; border:1px solid #2a3a6e; border-radius:10px; outline:none; }
+    input[type="datetime-local"] { padding:8px 10px; }
+    button { appearance:none; border:0; background:#5b8cff; color:white; padding:10px 14px; border-radius:10px; font-weight:600; cursor:pointer; box-shadow:0 5px 12px rgba(91,140,255,.35); }
+    button.secondary { background:#2a3a6e; box-shadow:none; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th, td { border-bottom:1px dashed #2a3a6e; padding:10px; text-align:left; font-size:14px; }
+    th { font-size:12px; text-transform:uppercase; letter-spacing:.6px; opacity:.8; }
+    .row { display:flex; gap:var(--gap); flex-wrap:wrap; }
+    .row > * { flex:1 1 180px; }
+    .muted { opacity:.8; }
+    .hidden { display:none !important; }
+    .ok { color:#5bff92; }
+    .warn { color:#ffd166; }
+    .err { color:#ff6b6b; }
+    .pill { display:inline-block; padding:2px 8px; background:#253055; border-radius:999px; font-size:12px; margin-left:8px; }
+    .footer { text-align:center; opacity:.7; font-size:12px; padding:22px; }
+    .split { display:grid; grid-template-columns: 1.2fr .8fr; gap: var(--gap); }
+    @media (max-width: 900px){ .split{ grid-template-columns: 1fr; } }
+  </style>
 </head>
 <body>
-  <h1>📦 Stock Management System</h1>
+  <header>
+    <h1>📦 Stock Management</h1>
+    <div class="user">
+      <span id="userInfo">Not signed in</span>
+      <button id="btnSignOut" class="secondary hidden">Sign out</button>
+    </div>
+  </header>
 
-  <!-- Material Master -->
-  <section>
-    <h2>Material Master</h2>
-    <input id="matCode" placeholder="Code">
-    <input id="matName" placeholder="Name">
-    <input id="matCategory" placeholder="Category">
-    <input id="matAlert" type="number" placeholder="Stock Quantity Alert">
-    <button onclick="saveMaterial()">Save</button>
-  </section>
+  <main>
+    <!-- AUTH -->
+    <section id="authSection" class="card">
+      <h2>Sign in</h2>
+      <div class="row">
+        <div>
+          <label>Email</label>
+          <input id="email" type="email" placeholder="you@example.com" />
+        </div>
+        <div>
+          <label>Password</label>
+          <input id="password" type="password" placeholder="••••••••" />
+        </div>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:10px;">
+        <button id="btnSignIn">Sign in</button>
+        <button id="btnRegister" class="secondary">Register</button>
+      </div>
+      <p id="authMsg" class="muted" style="margin-top:10px"></p>
+    </section>
 
-  <!-- Stock In -->
-  <section>
-    <h2>Stock In</h2>
-    <input id="inDate" type="datetime-local">
-    <input id="inMaterial" placeholder="Material Code">
-    <input id="inQty" type="number" placeholder="Qty">
-    <input id="inPrice" type="number" placeholder="Price">
-    <input id="inVendor" placeholder="Vendor">
-    <input id="inBill" placeholder="Bill No">
-    <input id="inRemark" placeholder="Remark">
-    <button onclick="stockIn()">Save</button>
-  </section>
+    <!-- DASH (role aware) -->
+    <section id="dashboard" class="card hidden">
+      <h2>Dashboard <span id="rolePill" class="pill">role</span></h2>
+      <div class="grid" id="dashGrid"></div>
+    </section>
 
-  <!-- Stock Out -->
-  <section>
-    <h2>Stock Out</h2>
-    <input id="outDate" type="datetime-local">
-    <input id="outMaterial" placeholder="Material Code">
-    <input id="outQty" type="number" placeholder="Qty">
-    <input id="outPrice" type="number" placeholder="Price">
-    <input id="outName" placeholder="Name">
-    <input id="outMobile" placeholder="Mobile">
-    <input id="outEmail" placeholder="Email">
-    <input id="outRemark" placeholder="Remark">
-    <button onclick="stockOut()">Save</button>
-  </section>
+    <!-- ADMIN AREA -->
+    <section id="adminArea" class="hidden">
+      <div class="grid">
+        <div class="card">
+          <h2>Material Master</h2>
+          <div class="row">
+            <div><label>Code</label><input id="mCode"/></div>
+            <div><label>Name</label><input id="mName"/></div>
+            <div><label>Category</label><input id="mCat"/></div>
+            <div><label>Stock Alert Qty</label><input id="mAlert" type="number"/></div>
+          </div>
+          <div style="margin-top:12px"><button id="btnSaveMaterial">Save Material</button></div>
+          <p class="muted" id="matMsg"></p>
+        </div>
 
-  <!-- Stock Register -->
-  <section>
-    <h2>Stock Register</h2>
-    <table border="1">
-      <thead>
-        <tr>
-          <th>Date</th><th>Material</th><th>In</th><th>Out</th><th>Balance</th><th>Remark</th>
-        </tr>
-      </thead>
-      <tbody id="stockRegister"></tbody>
-    </table>
-  </section>
+        <div class="card">
+          <h2>Stock In</h2>
+          <div class="row">
+            <div><label>Date & Time</label><input id="inDate" type="datetime-local"/></div>
+            <div><label>Material (Code)</label><input id="inMat"/></div>
+            <div><label>Qty</label><input id="inQty" type="number"/></div>
+            <div><label>Price</label><input id="inPrice" type="number" step="0.01"/></div>
+            <div><label>Vendor</label><input id="inVendor"/></div>
+            <div><label>Bill No</label><input id="inBill"/></div>
+            <div style="flex-basis:100%"><label>Remark</label><input id="inRemark"/></div>
+          </div>
+          <div style="margin-top:12px"><button id="btnStockIn">Save Stock-In</button></div>
+          <p class="muted" id="inMsg"></p>
+        </div>
 
-  <!-- Dashboard -->
-  <section>
-    <h2>Dashboard</h2>
-    <div id="dashboard"></div>
-  </section>
+        <div class="card">
+          <h2>Stock Register</h2>
+          <div class="row">
+            <div><label>Filter by Material Code</label><input id="srFilter" placeholder="(optional)"/></div>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Material</th><th>In</th><th>Out</th><th>Balance</th><th>Remark</th></tr>
+            </thead>
+            <tbody id="srBody"></tbody>
+          </table>
+        </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
-  <script src="firebase-config.js"></script>
-  <script src="app.js"></script>
+        <div class="card">
+          <h2>Amount Statement (₹)</h2>
+          <table>
+            <thead>
+              <tr><th>Material</th><th>Total In Qty</th><th>Total In Amount</th><th>Total Out Qty</th><th>Total Out Amount</th><th>Balance Qty</th></tr>
+            </thead>
+            <tbody id="amountBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- EMPLOYEE AREA -->
+    <section id="employeeArea" class="card hidden">
+      <h2>Stock Out</h2>
+      <div class="row">
+        <div><label>Date & Time</label><input id="outDate" type="datetime-local"/></div>
+        <div><label>Material (Code)</label><input id="outMat"/></div>
+        <div><label>Qty</label><input id="outQty" type="number"/></div>
+        <div><label>Price</label><input id="outPrice" type="number" step="0.01"/></div>
+        <div><label>Name</label><input id="outName"/></div>
+        <div><label>Mobile</label><input id="outMobile"/></div>
+        <div><label>Email</label><input id="outEmail"/></div>
+        <div style="flex-basis:100%"><label>Remark</label><input id="outRemark"/></div>
+      </div>
+      <div style="margin-top:12px"><button id="btnStockOut">Save Stock-Out</button></div>
+      <p class="muted" id="outMsg"></p>
+    </section>
+
+    <div class="footer">Built with Firebase Auth + Firestore</div>
+  </main>
+
+  <!-- Firebase SDKs (compat builds for vanilla JS) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    // 1) Paste your Firebase config here
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCDRy9N_jB1NBYevWaGwVB_c5NsXmOPDKM",
+  authDomain: "stockms-c279b.firebaseapp.com",
+  projectId: "stockms-c279b",
+  storageBucket: "stockms-c279b.firebasestorage.app",
+  messagingSenderId: "839892851599",
+  appId: "1:839892851599:web:e367cfb7d4789b0ca9c9fa",
+  measurementId: "G-2Z8X69CSDY"
+};
+
+    // 2) Init
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // ===== Helpers =====
+    const $ = (id) => document.getElementById(id);
+    const fmtDate = (v) => v ? new Date(v).toLocaleString() : '';
+    const toast = (el, msg, cls='muted') => { el.textContent = msg; el.className = cls; setTimeout(()=> el.textContent = '', 3500); };
+
+    // ===== Auth UI wiring =====
+    $('btnSignIn').onclick = async () => {
+      try { await auth.signInWithEmailAndPassword($('email').value, $('password').value); }
+      catch (e){ toast($('authMsg'), e.message, 'err'); }
+    };
+    $('btnRegister').onclick = async () => {
+      try {
+        const cred = await auth.createUserWithEmailAndPassword($('email').value, $('password').value);
+        // Default everyone to employee; promote to admin in Firestore manually
+        await db.collection('users').doc(cred.user.uid).set({ email: $('email').value, role: 'employee', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        toast($('authMsg'), 'Registered. You are an EMPLOYEE by default. Admin can change your role.', 'ok');
+      } catch(e){ toast($('authMsg'), e.message, 'err'); }
+    };
+    $('btnSignOut').onclick = () => auth.signOut();
+
+    let currentRole = null; // 'admin' | 'employee'
+
+    auth.onAuthStateChanged(async (user) => {
+      if(!user){
+        $('userInfo').textContent = 'Not signed in';
+        $('btnSignOut').classList.add('hidden');
+        $('authSection').classList.remove('hidden');
+        $('dashboard').classList.add('hidden');
+        $('adminArea').classList.add('hidden');
+        $('employeeArea').classList.add('hidden');
+        return;
+      }
+      $('userInfo').textContent = user.email;
+      $('btnSignOut').classList.remove('hidden');
+      $('authSection').classList.add('hidden');
+
+      // fetch role
+      const snap = await db.collection('users').doc(user.uid).get();
+      currentRole = snap.exists ? (snap.data().role || 'employee') : 'employee';
+      $('dashboard').classList.remove('hidden');
+      $('rolePill').textContent = currentRole.toUpperCase();
+
+      if(currentRole === 'admin'){
+        $('adminArea').classList.remove('hidden');
+        $('employeeArea').classList.add('hidden');
+        bootstrapAdmin();
+      } else {
+        $('employeeArea').classList.remove('hidden');
+        $('adminArea').classList.add('hidden');
+        bootstrapEmployee();
+      }
+      initDashboard();
+    });
+
+    // ===== Materials =====
+    $('btnSaveMaterial').onclick = async () => {
+      try {
+        const code = $('mCode').value.trim();
+        if(!code) throw new Error('Code required');
+        const data = { code, name: $('mName').value.trim(), category: $('mCat').value.trim(), alert: Number($('mAlert').value||0), balance: 0 };
+        await db.collection('materials').doc(code).set(data, { merge: true });
+        toast($('matMsg'), 'Material saved', 'ok');
+      } catch(e){ toast($('matMsg'), e.message, 'err'); }
+    };
+
+    // ===== Stock In (Admin) =====
+    $('btnStockIn').onclick = async () => {
+      if(currentRole !== 'admin') return;
+      try {
+        const qty = Number($('inQty').value);
+        if(!qty || qty <= 0) throw new Error('Qty must be > 0');
+        const doc = {
+          type:'in',
+          date: $('inDate').value ? new Date($('inDate').value) : new Date(),
+          material: $('inMat').value.trim(),
+          qty,
+          price: Number($('inPrice').value||0),
+          vendor: $('inVendor').value.trim(),
+          billNo: $('inBill').value.trim(),
+          remark: $('inRemark').value.trim(),
+          createdBy: auth.currentUser.uid,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        await db.collection('txns').add(doc);
+        await db.collection('materials').doc(doc.material).set({ balance: firebase.firestore.FieldValue.increment(qty) }, { merge: true });
+        toast($('inMsg'), 'Stock-In saved', 'ok');
+      } catch(e){ toast($('inMsg'), e.message, 'err'); }
+    };
+
+    // ===== Stock Out (Employee) =====
+    $('btnStockOut').onclick = async () => {
+      try {
+        const qty = Number($('outQty').value);
+        if(!qty || qty <= 0) throw new Error('Qty must be > 0');
+        const doc = {
+          type:'out',
+          date: $('outDate').value ? new Date($('outDate').value) : new Date(),
+          material: $('outMat').value.trim(),
+          qty,
+          price: Number($('outPrice').value||0),
+          name: $('outName').value.trim(),
+          mobile: $('outMobile').value.trim(),
+          email: $('outEmail').value.trim(),
+          remark: $('outRemark').value.trim(),
+          createdBy: auth.currentUser.uid,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        await db.collection('txns').add(doc);
+        await db.collection('materials').doc(doc.material).set({ balance: firebase.firestore.FieldValue.increment(-qty) }, { merge: true });
+        toast($('outMsg'), 'Stock-Out saved', 'ok');
+      } catch(e){ toast($('outMsg'), e.message, 'err'); }
+    };
+
+    // ===== Dashboard Cards =====
+    function initDashboard(){
+      db.collection('materials').orderBy('code').onSnapshot(s=>{
+        const el = $('dashGrid'); el.innerHTML='';
+        s.forEach(d=>{
+          const m = d.data();
+          const warn = m.alert && m.balance <= m.alert ? '<span class="pill warn">LOW</span>' : '';
+          const div = document.createElement('div');
+          div.className='card';
+          div.innerHTML = `
+            <div class="row">
+              <div style="flex:1 1 60%">
+                <h3 style="margin:0 0 6px">${m.name||'(no name)'} <span class="pill">${m.code}</span> ${warn}</h3>
+                <div class="muted">Category: ${m.category||'-'}</div>
+              </div>
+              <div style="text-align:right; font-weight:700; font-size:20px">Qty: ${m.balance||0}</div>
+            </div>`;
+          el.appendChild(div);
+        });
+      });
+    }
+
+    // ===== Stock Register + Amount Statement (Admin) =====
+    function bootstrapAdmin(){
+      const renderSR = async () => {
+        const filter = $('srFilter').value.trim();
+        let q = db.collection('txns').orderBy('date', 'asc');
+        if(filter){ q = q.where('material', '==', filter); }
+        q.onSnapshot(async (snap)=>{
+          const materials = {}; // balance per material while iterating
+          const tbody = $('srBody');
+          tbody.innerHTML = '';
+          snap.forEach(doc=>{
+            const t = doc.data();
+            const code = t.material || 'NA';
+            if(materials[code] == null) materials[code] = 0;
+            materials[code] += t.type === 'in' ? t.qty : -t.qty;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${fmtDate(t.date?.toDate ? t.date.toDate() : t.date)}</td>
+                            <td>${code}</td>
+                            <td>${t.type==='in'? t.qty : ''}</td>
+                            <td>${t.type==='out'? t.qty : ''}</td>
+                            <td>${materials[code]}</td>
+                            <td>${t.remark||''}</td>`;
+            tbody.appendChild(tr);
+          });
+        });
+      };
+      $('srFilter').addEventListener('input', () => renderSR());
+      renderSR();
+
+      // Amount statement aggregator
+      db.collection('txns').onSnapshot((snap)=>{
+        const map = {}; // code -> aggregates
+        snap.forEach(d=>{
+          const t = d.data();
+          const key = t.material || 'NA';
+          if(!map[key]) map[key] = { inQty:0, inAmt:0, outQty:0, outAmt:0 };
+          if(t.type==='in'){ map[key].inQty += t.qty; map[key].inAmt += (t.qty * (t.price||0)); }
+          else { map[key].outQty += t.qty; map[key].outAmt += (t.qty * (t.price||0)); }
+        });
+        const tbody = $('amountBody'); tbody.innerHTML='';
+        Object.keys(map).sort().forEach(code=>{
+          const a = map[code];
+          const bal = a.inQty - a.outQty;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${code}</td><td>${a.inQty}</td><td>${a.inAmt.toFixed(2)}</td><td>${a.outQty}</td><td>${a.outAmt.toFixed(2)}</td><td>${bal}</td>`;
+          tbody.appendChild(tr);
+        });
+      });
+    }
+
+    // ===== Employee extras (optional now) =====
+    function bootstrapEmployee(){ /* reserved for employee-only streams */ }
+  </script>
 </body>
 </html>
